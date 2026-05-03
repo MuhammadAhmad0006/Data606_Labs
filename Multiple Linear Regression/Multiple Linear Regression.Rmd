@@ -3,16 +3,31 @@ title: "Lab Name"
 author: "Author Name"
 date: "`r Sys.Date()`"
 output: openintro::lab_report
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r load-packages, message=FALSE}
 library(tidyverse)
 library(openintro)
+library(GGally)
+library(ggplot2)
 ```
 
 ### Exercise 1
 
-Insert any text here.
+Is this an observational study or an experiment? The original research
+question posed in the paper is whether beauty leads directly to the
+differences in course evaluations. Given the study design, is it
+possible to answer this question as it is phrased? If not, rephrase the
+question.
+
+This is an observational study because we are surveying and gather data
+without altering any of the subjects involved. That question cannot be
+answered with this kind of study we can find correlations but not
+causation. A better question would be "Is there an association between
+instructor beauty and course evaluations?"
 
 ```{r code-chunk-label}
 # Insert code for Exercise 1 here
@@ -20,5 +35,266 @@ Insert any text here.
 
 ### Exercise 2
 
-...
+```{r}
+ggplot(evals, aes(x = score)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20,
+                 fill = "steelblue") +
+  geom_density(color = "red", linewidth = 1) +
+  labs(title = "Distribution of Evaluation Scores",
+       x = "Score", y = "Density") +
+  theme_minimal()
+```
 
+This is the distribution of score and we can see that it is skewed to
+the left. This tells us that students rate courses by \### Exercise 3
+
+### Exercise 4
+
+```{r}
+ggplot(data = evals, aes(x = bty_avg, y = score)) +
+  geom_jitter()
+```
+
+What was misleading about the other scatter plot was the clustering.
+Before it was spaced out and over plotted over the same point. With
+geom_jitter we get to add some randomness to get clusters of data that
+more visually striking that perfectly segmented data that overlaps.
+
+### Exercise 5
+
+```{r}
+m_bty <- lm(score ~ bty_avg, data = evals)
+summary(m_bty)
+```
+
+The equation of the linear model looks like this:
+score=3.880+0.067×bty_avg
+
+```{r}
+ggplot(data = evals, aes(x = bty_avg, y = score)) +
+  geom_jitter() +
+  geom_smooth(method = "lm")
+```
+
+### Exercise 6
+
+```{r}
+library(ggplot2)
+
+# 1. Residuals vs Fitted (Linearity & Equal Variance)
+ggplot(m_bty, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "loess", color = "darkblue", se = FALSE) +
+  labs(title = "Residuals vs Fitted",
+       x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# 2. Histogram of Residuals (Normality)
+ggplot(m_bty, aes(x = .resid)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "white") +
+  labs(title = "Histogram of Residuals",
+       x = "Residuals", y = "Count") +
+  theme_minimal()
+
+# 3. Normal Q-Q Plot (Normality)
+ggplot(m_bty, aes(sample = .resid)) +
+  stat_qq(color = "steelblue", alpha = 0.5) +
+  stat_qq_line(color = "red", linetype = "dashed") +
+  labs(title = "Normal Q-Q Plot of Residuals",
+       x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+# 4. Residuals vs Order (Independence)
+ggplot(m_bty, aes(x = 1:nrow(evals), y = .resid)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Order",
+       x = "Order of Data Collection", y = "Residuals") +
+  theme_minimal()
+```
+
+1.  Linearity — Residuals vs Fitted The residuals should be randomly
+    scattered around 0 with no patterns.The plot shows roughly random
+    scatter. though with some clustering at higher fitted values which
+    is due the the left skewedness. The condition is kind of satisfied
+    but not perfectly.
+
+2.  Nearly Normal Residuals — Histogram & Q-Q Plot This histogram will
+    show a left-skewed distribution show that score is left-skewed as
+    well. The
+
+3.  Constant Variability — Residuals vs Fitted Looking at the spread of
+    residuals across fitted values, there is some evidence of
+    non-constant variance — residuals appear more compressed at higher
+    fitted values due to the ceiling effect at 5.0. This is a mild
+    violation of homoscedasticity worth noting.
+
+4.  Independence — Residuals vs Order The residuals vs order plot should
+    show no time-based pattern or trend. The data was most likely
+    collected randomly across professors and courses, this condition is
+    reasonably satisfied.
+
+### Exercise 7
+
+```{r}
+library(ggplot2)
+
+m_bty_gen <- lm(score ~ bty_avg + gender, data = evals)
+
+# 1. Residuals vs Fitted
+ggplot(m_bty_gen, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "loess", color = "darkblue", se = FALSE) +
+  labs(title = "Residuals vs Fitted (m_bty_gen)",
+       x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# 2. Histogram of Residuals
+ggplot(m_bty_gen, aes(x = .resid)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "white") +
+  labs(title = "Histogram of Residuals (m_bty_gen)",
+       x = "Residuals", y = "Count") +
+  theme_minimal()
+
+# 3. Q-Q Plot
+ggplot(m_bty_gen, aes(sample = .resid)) +
+  stat_qq(color = "steelblue", alpha = 0.5) +
+  stat_qq_line(color = "red", linetype = "dashed") +
+  labs(title = "Normal Q-Q Plot (m_bty_gen)",
+       x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+# 4. Residuals vs Order
+ggplot(m_bty_gen, aes(x = 1:nrow(evals), y = .resid)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Order (m_bty_gen)",
+       x = "Order", y = "Residuals") +
+  theme_minimal()
+```
+
+The conditions for for this model are reasonable and the p-values can be
+trusted. \### Exercise 8
+
+bty_avg is still a significant predictor of score. Adding gender to the
+model changed the parameter estimate for bty_avg by the increased of
+bty_avg from about 0.067 to 0.074.
+
+```{R}
+summary(m_bty)
+summary(m_bty_gen)
+```
+
+### Exercise 9
+
+the equation of the line that represents color pictures is
+Score = β^0+β^1×bty_avg+β\^2×(1) which equals to = 
+score = 3.74734 + 0.07416 \* bty_avg + 0.17239
+Two professors who receive the same beauty rating, the professor with a color photo would have a higher score. Males tend to have higher scores than women.
+
+### Exercise 10
+
+```{r}
+m_bty_rank <- lm(score ~ bty_avg + rank, data = evals)
+summary(m_bty_rank)
+```
+
+R will add another line into the regression summary we know this because of the recording of the ranked variable twice.
+
+### Exercise 11 
+
+I assume that cls_profs to have the highest p-value because I do not see a reason why the number of professors teaching other sections of the same course woulds affect the professors ratings compared to other factors like gender or bty_avg. I think that cls_level could also be close or higher than cls_profs because cls_level might be not matter unless the students pin the harder course work on the professors teaching ability. 
+
+
+### Exercise 12 
+
+```{r}
+m_full <- lm(score ~ rank + gender + ethnicity + language + age +
+               cls_perc_eval + cls_students + cls_level + cls_profs +
+               cls_credits + bty_avg + pic_outfit + pic_color,
+             data = evals)
+summary(m_full)
+```
+The models shows that both cls_profs and cls_level have the top two higest p value but cls_profs has significantly more.
+
+### Exercise 13
+
+the ethnicity not minority variable increases the score by about 0.1235 or 12% when all other variables are constant. 
+
+### Exercise 14
+
+```{r}
+m_full2 <- lm(score ~ rank + gender + ethnicity + language + age +
+                cls_perc_eval + cls_students + cls_level +
+                cls_credits + bty_avg + pic_outfit + pic_color,
+              data = evals)
+summary(m_full2)
+```
+After dropping cls_profs, the coefficients and significance levels of the remaining variables will change very little. This tells us that cls_profs was not collinear with the other predictors — if it were, removing it would cause noticeable shifts in other estimates. Its removal has minimal impact, further confirming it was a non-informative variable that can be safely excluded.
+
+
+### Exercise 15
+
+```{r}
+
+back_select <- lm(score ~ gender + ethnicity + language + age +
+                cls_perc_eval + cls_credits + bty_avg +
+                pic_outfit + pic_color,
+              data = evals)
+summary(back_select)
+```
+
+score = 
+
+### Excercise 16
+
+```{r}
+# Residuals vs Fitted
+ggplot(m_final, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "loess", color = "orange", se = FALSE) +
+  labs(title = "Residuals vs Fitted (Final Model)",
+       x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# Q-Q Plot
+ggplot(m_final, aes(sample = .resid)) +
+  stat_qq(color = "steelblue", alpha = 0.5) +
+  stat_qq_line(color = "red", linetype = "dashed") +
+  labs(title = "Q-Q Plot (Final Model)") +
+  theme_minimal()
+
+# Histogram of residuals
+ggplot(m_final, aes(x = .resid)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "white") +
+  labs(title = "Histogram of Residuals (Final Model)",
+       x = "Residuals") +
+  theme_minimal()
+
+# Residuals vs Order
+ggplot(m_final, aes(x = 1:nrow(evals), y = .resid)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Order (Final Model)",
+       x = "Order", y = "Residuals") +
+  theme_minimal()
+```
+The diagnostic plots for the final model show the same pattern as earlier models — linearity and independence are reasonably satisfied, residuals are mildly left-skewed (reflecting the ceiling effect in scores), and there is slight heteroscedasticity at higher fitted values. Overall the conditions are adequately met for a large sample, and the model results can be cautiously trusted.
+
+
+### Exercise 17 
+
+Yes, this sampling design does have implications for the independence condition. Since each row represents a course rather than a professor, and professors teach multiple courses, multiple observations come from the same professor. This introduces clustering — rows sharing a professor are not truly independent of one another, as a professor's characteristics (teaching style, personality, appearance) will influence all of their course evaluations similarly. This violates the independence condition and means standard errors may be underestimated. A more rigorous analysis would account for this with multilevel or clustered standard error models.
+
+### Exercise 18
+
+Based on the final model, a professor at UT Austin associated with a high evaluation score would tend to have the following characteristics:
+
+male, non minority, English speaking, younger in age, teaches a one-credit course, profile with a black and white photo, student rated the professor with a high average beauty score and received a high number of evaluations from students.
+
+### Exercise 19
+
+No, I would not be comfortable to generalize my conclusions to apply to professors generally at any university. There are so many university in America and we need a sample size large enough to represent that to even get close to any generalizations. Not to mention different communities value different attributes so it may not even prove worthwhile to do a sample that large.
