@@ -48,6 +48,19 @@ ggplot(evals, aes(x = score)) +
 This is the distribution of score and we can see that it is skewed to
 the left. This tells us that students rate courses by \### Exercise 3
 
+### Exercise 3
+
+```{r}
+ggplot(evals, aes(x = age, y = bty_avg)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Relationship Between Age and Average Beauty Rating",
+       x = "Age (years)",
+       y = "Average Beauty Rating") +
+  theme_minimal()
+```
+The plot reveals a weak negative relationship between age and average beauty rating
+
 ### Exercise 4
 
 ```{r}
@@ -114,26 +127,13 @@ ggplot(m_bty, aes(x = 1:nrow(evals), y = .resid)) +
   theme_minimal()
 ```
 
-1.  Linearity — Residuals vs Fitted The residuals should be randomly
-    scattered around 0 with no patterns.The plot shows roughly random
-    scatter. though with some clustering at higher fitted values which
-    is due the the left skewedness. The condition is kind of satisfied
-    but not perfectly.
+1.  Linearity — Residuals vs Fitted The residuals should be randomly scattered around 0 with no patterns.The plot shows roughly random scatter. though with some clustering at higher fitted values which is due the the left skewedness. The condition is kind of satisfied but not perfectly.
 
-2.  Nearly Normal Residuals — Histogram & Q-Q Plot This histogram will
-    show a left-skewed distribution show that score is left-skewed as
-    well. The
+2.  Nearly Normal Residuals — Histogram & Q-Q Plot This histogram will show a left-skewed distribution show that score is left-skewed as well.
 
-3.  Constant Variability — Residuals vs Fitted Looking at the spread of
-    residuals across fitted values, there is some evidence of
-    non-constant variance — residuals appear more compressed at higher
-    fitted values due to the ceiling effect at 5.0. This is a mild
-    violation of homoscedasticity worth noting.
+3.  Constant Variability — Residuals vs Fitted Looking at the spread of residuals across fitted values, there is some evidence of the variance being not constant meaning that residuals appear more compressed at higher n fitted values due to the ceiling effect at 5.0. 
 
-4.  Independence — Residuals vs Order The residuals vs order plot should
-    show no time-based pattern or trend. The data was most likely
-    collected randomly across professors and courses, this condition is
-    reasonably satisfied.
+4.  Independence — Residuals vs Order The residuals vs order plot shows no time-based pattern or trend. 
 
 ### Exercise 7
 
@@ -176,7 +176,9 @@ ggplot(m_bty_gen, aes(x = 1:nrow(evals), y = .resid)) +
 ```
 
 The conditions for for this model are reasonable and the p-values can be
-trusted. \### Exercise 8
+trusted. 
+
+### Exercise 8
 
 bty_avg is still a significant predictor of score. Adding gender to the
 model changed the parameter estimate for bty_avg by the increased of
@@ -232,7 +234,7 @@ m_full2 <- lm(score ~ rank + gender + ethnicity + language + age +
               data = evals)
 summary(m_full2)
 ```
-After dropping cls_profs, the coefficients and significance levels of the remaining variables will change very little. This tells us that cls_profs was not collinear with the other predictors — if it were, removing it would cause noticeable shifts in other estimates. Its removal has minimal impact, further confirming it was a non-informative variable that can be safely excluded.
+After dropping cls_profs, the coefficients and significance levels of the remaining variables will change very little. This tells us that cls_profs was not collinear with the other predictors if it were, removing it would cause noticeable shifts in other estimates. Its removal has minimal impact, further confirming it was a non-informative variable that can be safely excluded.
 
 
 ### Exercise 15
@@ -246,13 +248,13 @@ back_select <- lm(score ~ gender + ethnicity + language + age +
 summary(back_select)
 ```
 
-score = 
+Score = 3.907030 + (ethnicity * 0.163818)+(gender * 0.202597) + (language* -0.246683) + (age * -0.006925) + (cls_perc_eval * 0.004942) + (cls_creditsone * 0.517205) + (_btyavg * 0.046732) + (pic_color * -0.180870)
 
 ### Excercise 16
 
 ```{r}
 # Residuals vs Fitted
-ggplot(m_final, aes(x = .fitted, y = .resid)) +
+ggplot(m_full, aes(x = .fitted, y = .resid)) +
   geom_point(alpha = 0.5, color = "steelblue") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_smooth(method = "loess", color = "orange", se = FALSE) +
@@ -261,33 +263,33 @@ ggplot(m_final, aes(x = .fitted, y = .resid)) +
   theme_minimal()
 
 # Q-Q Plot
-ggplot(m_final, aes(sample = .resid)) +
+ggplot(m_full, aes(sample = .resid)) +
   stat_qq(color = "steelblue", alpha = 0.5) +
   stat_qq_line(color = "red", linetype = "dashed") +
   labs(title = "Q-Q Plot (Final Model)") +
   theme_minimal()
 
 # Histogram of residuals
-ggplot(m_final, aes(x = .resid)) +
+ggplot(m_full, aes(x = .resid)) +
   geom_histogram(bins = 20, fill = "steelblue", color = "white") +
   labs(title = "Histogram of Residuals (Final Model)",
        x = "Residuals") +
   theme_minimal()
 
 # Residuals vs Order
-ggplot(m_final, aes(x = 1:nrow(evals), y = .resid)) +
+ggplot(m_full, aes(x = 1:nrow(evals), y = .resid)) +
   geom_point(alpha = 0.5, color = "steelblue") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   labs(title = "Residuals vs Order (Final Model)",
        x = "Order", y = "Residuals") +
   theme_minimal()
 ```
-The diagnostic plots for the final model show the same pattern as earlier models — linearity and independence are reasonably satisfied, residuals are mildly left-skewed (reflecting the ceiling effect in scores), and there is slight heteroscedasticity at higher fitted values. Overall the conditions are adequately met for a large sample, and the model results can be cautiously trusted.
+The conditions for this model are not met. This is indicated by the residuals being nearly normal and slightly left-skewed. The variability is also nearly constant.
 
 
 ### Exercise 17 
 
-Yes, this sampling design does have implications for the independence condition. Since each row represents a course rather than a professor, and professors teach multiple courses, multiple observations come from the same professor. This introduces clustering — rows sharing a professor are not truly independent of one another, as a professor's characteristics (teaching style, personality, appearance) will influence all of their course evaluations similarly. This violates the independence condition and means standard errors may be underestimated. A more rigorous analysis would account for this with multilevel or clustered standard error models.
+Yes, this sampling design does have implications for the independence condition. Since each row represents a course rather than a professor, and professors teach multiple courses, multiple observations come from the same professor.  Rows sharing a professor are not truly independent of one another, as a professor's characteristics (teaching style, personality, appearance) will influence all of their course evaluations similarly. This violates the independence condition and means standard errors may be underestimated.
 
 ### Exercise 18
 
